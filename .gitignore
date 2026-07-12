@@ -2,6 +2,12 @@ node_modules/
 dist/
 .next/
 out/
+
+# lockfiles are not committed
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+bun.lockb
 .env
 .env.local
 *.log

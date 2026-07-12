@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { LogoMark } from "@/components/ui/logo";
+import { useVoucher } from "@/app/providers";
 
 const LINKS = [
   { label: "How it works", href: "#how" },
@@ -9,6 +11,7 @@ const LINKS = [
 ];
 
 export function SiteNav() {
+  const { open } = useVoucher();
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     const on = () => setScrolled(window.scrollY > 12);
@@ -40,12 +43,17 @@ export function SiteNav() {
               </a>
             ))}
           </div>
-          <a
-            href="#app"
-            className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-zinc-950 transition-transform hover:scale-[1.02]"
-          >
-            Create a voucher
-          </a>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:block">
+              <ConnectButton showBalance={false} chainStatus="none" accountStatus="avatar" label="Connect" />
+            </div>
+            <button
+              onClick={() => open("create")}
+              className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-zinc-950 transition-transform hover:scale-[1.02]"
+            >
+              Create a voucher
+            </button>
+          </div>
         </nav>
       </div>
     </div>

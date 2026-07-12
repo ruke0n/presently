@@ -2,6 +2,7 @@
 
 import { Gift, Wallet, Share2, Sparkles, Cake, Trophy, Megaphone, HeartHandshake } from "lucide-react";
 import { BentoGrid } from "@/components/ui/bento-grid";
+import { useVoucher } from "@/app/providers";
 
 export function Reveal({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   return (
@@ -109,7 +110,8 @@ export function UseCases() {
   );
 }
 
-export function CtaBand({ onCreate }: { onCreate?: () => void }) {
+export function CtaBand() {
+  const { open } = useVoucher();
   return (
     <section className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <Reveal>
@@ -121,7 +123,7 @@ export function CtaBand({ onCreate }: { onCreate?: () => void }) {
             Create your first voucher on Arc testnet in under a minute.
           </p>
           <button
-            onClick={onCreate}
+            onClick={() => open("create")}
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-white px-8 py-4 text-sm font-semibold text-zinc-950 transition-transform hover:scale-[1.02]"
           >
             <Gift className="h-4 w-4" />
