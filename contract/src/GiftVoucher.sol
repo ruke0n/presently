@@ -43,6 +43,8 @@ contract GiftVoucher is ReentrancyGuard {
 
     /// @notice Lock `amount` USDC against `codeHash` = keccak256(bytes(code)).
     /// @dev The caller computes the hash off-chain so the code never appears here.
+    /// @param codeHash keccak256 of the UTF-8 bytes of the secret code.
+    /// @param amount Amount of USDC (base units) to lock in the voucher.
     function createVoucher(bytes32 codeHash, uint256 amount) external nonReentrant {
         if (amount == 0) revert ZeroAmount();
         if (vouchers[codeHash].sender != address(0)) revert CodeInUse();
@@ -53,6 +55,7 @@ contract GiftVoucher is ReentrancyGuard {
     }
 
     /// @notice Redeem a voucher by presenting its `code`; funds go to the caller.
+    /// @param code The secret code; the contract hashes it to find the voucher.
     function redeem(string calldata code) external nonReentrant {
         bytes32 codeHash = keccak256(bytes(code));
         Voucher storage v = vouchers[codeHash];
@@ -66,6 +69,7 @@ contract GiftVoucher is ReentrancyGuard {
     }
 
     /// @notice Sender takes back an unredeemed voucher.
+    /// @param codeHash The hash the voucher was created against.
     function reclaim(bytes32 codeHash) external nonReentrant {
         Voucher storage v = vouchers[codeHash];
         if (v.sender == address(0)) revert VoucherMissing();
