@@ -6,39 +6,72 @@ straight into their wallet. No account, no separate gas token, just USDC on Arc.
 
 A *present* that arrives *presently*.
 
-## Status
+## How it works
 
-Frontend (this repo). A polished marketing site with:
+1. **Create** a voucher: pick a USDC amount. The app generates a random code
+   (`PRES-XXXX-XXXX`), hashes it, and locks the USDC against that hash on-chain.
+2. **Share** the code, or the `/?claim=CODE` link.
+3. **Redeem**: whoever presents the code claims the USDC into their own wallet.
+   The sender can reclaim a voucher that hasn't been redeemed.
 
-- a **LiquidMetal** shader hero (`@paper-design/shaders-react`),
-- how-it-works, a bento feature grid, use cases, and a big-wordmark footer,
-- a custom ribbon-bow logo + favicon.
+The code is a bearer instrument, treat it like cash. It is only revealed at
+redeem time, so creating a voucher leaks nothing.
 
-The on-chain voucher contract and wallet-wired create/redeem flow are the next
-step; the Create / Redeem buttons are placeholders until then.
+## Contract
+
+`GiftVoucher` ([contract/src/GiftVoucher.sol](contract/src/GiftVoucher.sol)) is a
+single, unowned contract, no factory, no admin keys.
+
+| Function | Who | What |
+|---|---|---|
+| `createVoucher(bytes32 codeHash, uint256 amount)` | sender | pulls `amount` USDC and locks it against `codeHash = keccak256(bytes(code))` |
+| `redeem(string code)` | anyone | hashes the code, pays the voucher to the caller |
+| `reclaim(bytes32 codeHash)` | sender | takes back an unredeemed voucher |
+| `isClaimable(bytes32 codeHash)` | view | whether a voucher exists and is unclaimed |
+
+`ReentrancyGuard` + `SafeERC20`. 10 Foundry tests in
+[contract/test](contract/test).
+
+## Live deployment
+
+Arc testnet (chain `5042002`), see
+[deployments/arc-testnet.json](deployments/arc-testnet.json):
+
+| | |
+|---|---|
+| GiftVoucher | `0xec1399B695cA96e3f98927c59d01D3141086716C` |
+| USDC (ERC-20, 6 decimals) | `0x3600000000000000000000000000000000000000` |
 
 ## Stack
 
-- Next.js (App Router) + TypeScript
-- Tailwind CSS v4
-- shadcn-style `components/ui` (button, badge, card)
-- framer-motion, lucide-react
+- Next.js (App Router, static export) + TypeScript
+- Tailwind CSS v4, shadcn-style `components/ui`
+- wagmi + RainbowKit + viem for the create/redeem flow
+- `@paper-design/shaders-react` (LiquidMetal hero), framer-motion, lucide-react
+- Foundry for the contract
 
 ## Run
 
 ```bash
-pnpm install
-pnpm dev        # http://localhost:3000
+npm install
+npm run dev        # http://localhost:3000
+
+# contract (needs Foundry)
+cd contract && forge install foundry-rs/forge-std OpenZeppelin/openzeppelin-contracts
+forge test
 ```
 
 ## Layout
 
 ```
-app/                 routes, layout, favicon (icon.svg)
+app/                 routes, layout, providers (wallet + dialog), favicon
 components/
   ui/                logo, liquid-metal-hero, bento-grid, button/badge/card
-  site-nav.tsx       sticky nav
-  site-footer.tsx    footer
-  sections.tsx       how-it-works, features, use cases, CTA
-lib/utils.ts         cn()
+  voucher-dialog.tsx create / redeem flow
+  hero-section.tsx   hero wired to the dialog
+  site-nav / site-footer / sections
+lib/
+  chain.ts           Arc config, addresses, ABIs, code hashing
+contract/            Foundry: GiftVoucher.sol + tests + deploy script
+deployments/         recorded on-chain addresses
 ```
